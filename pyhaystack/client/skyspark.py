@@ -95,6 +95,29 @@ class SkysparkScramHaystackSession(HaystackSession, evalexpr.EvalOpsMixin):
 
     # Private methods/properties
 
+    # For _get_grid, _post_grid, wrap the superclass version with a version
+    # that defaults to exclude_cookies=True.  This is because SkySpark gets
+    # confused and demands an attestation key if we round-trip its cookies.
+
+    def _get_grid(
+            self, uri, callback, expect_format=None, cache=False,
+            exclude_cookies=True, **kwargs
+    ):
+        return super(SkysparkScramHaystackSession, self)._get_grid(
+                uri=uri, callback=callback, expect_format=expect_format,
+                cache=cache, exclude_cookies=exclude_cookies, **kwargs
+        )
+
+    def _post_grid(
+            self, uri, grid, callback, expect_format=None, cache=False,
+            exclude_cookies=True, **kwargs
+    ):
+        return super(SkysparkScramHaystackSession, self)._post_grid(
+                uri=uri, grid=grid, callback=callback,
+                expect_format=expect_format, cache=cache,
+                exclude_cookies=exclude_cookies, **kwargs
+        )
+
     def _on_authenticate_done(self, operation, **kwargs):
         """
         Process the result of an authentication operation.  This needs to be
