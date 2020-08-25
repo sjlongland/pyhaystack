@@ -161,6 +161,7 @@ class BaseGridOperation(BaseAuthOperation):
         cache=False,
         cache_key=None,
         accept_status=None,
+        exclude_cookies=None
     ):
         """
         Initialise a request for the grid with the given URI and arguments.
@@ -183,6 +184,10 @@ class BaseGridOperation(BaseAuthOperation):
         :param cache_key: Name of the key to use when the object is cached.
         :param accept_status: What status codes to accept, in addition to the
                             usual ones?
+        :param exclude_cookies:
+                        If True, exclude all default cookies and use only
+                        the cookies given.  Otherwise, this is an iterable
+                        of cookie names to be excluded.
         """
 
         super(BaseGridOperation, self).__init__(session, uri)
@@ -209,6 +214,7 @@ class BaseGridOperation(BaseAuthOperation):
         self._raw_response = raw_response
         self._headers = {}
         self._accept_status = accept_status
+        self._exclude_cookies = exclude_cookies
 
         self._cache = cache
         if cache and (cache_key is None):
@@ -373,6 +379,7 @@ class GetGridOperation(BaseGridOperation):
                 headers=self._headers,
                 callback=self._on_response,
                 accept_status=self._accept_status,
+                exclude_cookies=self._exclude_cookies
             )
         except:  # Catch all exceptions to pass to caller.
             self._log.debug("Get fails", exc_info=1)
@@ -424,6 +431,7 @@ class PostGridOperation(BaseGridOperation):
                 headers=self._headers,
                 callback=self._on_response,
                 accept_status=self._accept_status,
+                exclude_cookies=self._exclude_cookies
             )
         except:  # Catch all exceptions to pass to caller.
             self._log.debug("Post fails", exc_info=1)
