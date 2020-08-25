@@ -442,13 +442,19 @@ class HaystackSession(object):
     # Protected methods/properties
 
     def _on_about(self, cache, callback, **kwargs):
-        return self._get_grid("about", callback, cache=cache, **kwargs)
+        grid = hszinc.Grid()
+        grid.column["empty"] = {}
+        return self._post_grid("about", grid, callback, cache=cache, **kwargs)
 
     def _on_ops(self, cache, callback, **kwargs):
-        return self._get_grid("ops", callback, cache=cache, **kwargs)
+        grid = hszinc.Grid()
+        grid.column["empty"] = {}
+        return self._post_grid("ops", grid, callback, cache=cache, **kwargs)
 
     def _on_formats(self, cache, callback, **kwargs):
-        return self._get_grid("formats", callback, cache=cache, **kwargs)
+        grid = hszinc.Grid()
+        grid.column["empty"] = {}
+        return self._post_grid("formats", grid, callback, cache=cache, **kwargs)
 
     def _on_read(self, ids, filter_expr, limit, callback, **kwargs):
         if isinstance(ids, string_types) or isinstance(ids, hszinc.Ref):
@@ -461,24 +467,28 @@ class HaystackSession(object):
 
             ids = [self._obj_to_ref(r) for r in ids]
 
-            if len(ids) == 1:
-                # Reading a single entity
-                return self._get_grid("read", callback, args={"id": ids[0]}, **kwargs)
-            else:
-                # Reading several entities
-                grid = hszinc.Grid()
-                grid.column["id"] = {}
-                grid.extend([{"id": r} for r in ids])
-                return self._post_grid("read", grid, callback, **kwargs)
+            grid = hszinc.Grid()
+            grid.column["id"] = {}
+            grid.extend([{"id": r} for r in ids])
+            return self._post_grid("read", grid, callback, **kwargs)
         else:
             args = {"filter": filter_expr}
             if limit is not None:
                 args["limit"] = int(limit)
 
-            return self._get_grid("read", callback, args=args, **kwargs)
+            grid = hszinc.Grid()
+            grid.column["filter"] = {}
+            if "limit" in args:
+                grid.column["limit"] = {}
+
+            grid.append(args)
+            return self._post_grid("read", grid, callback, **kwargs)
 
     def _on_nav(self, nav_id, callback, **kwargs):
-        return self._get_grid("nav", callback, args={"nav_id": nav_id}, **kwargs)
+        grid = hszinc.Grid()
+        grid.column["navId"] = {}
+        grid.append({"navId": nav_id})
+        return self._post_grid("nav", grid, callback, **kwargs)
 
     def _on_watch_sub(self, points, watch_id, watch_dis, lease, callback, **kwargs):
         grid = hszinc.Grid()
@@ -516,6 +526,8 @@ class HaystackSession(object):
         return self._post_grid("watchPoll", grid, callback, **kwargs)
 
     def _on_point_write(self, point, level, val, who, duration, callback, **kwargs):
+        grid = hszinc.Grid()
+        grid.column["id"] = {}
         args = {"id": self._obj_to_ref(point)}
         if level is None:
             if (val is not None) or (who is not None) or (duration is not None):
@@ -523,12 +535,19 @@ class HaystackSession(object):
                     "If level is None, val, who and duration must " "be None too."
                 )
         else:
+            grid.column["level"] = {}
+            grid.column["val"] = {}
             args.update({"level": level, "val": val})
+
             if who is not None:
+                grid.column["who"] = {}
                 args["who"] = who
             if duration is not None:
+                grid.column["duration"] = {}
                 args["duration"] = duration
-        return self._get_grid("pointWrite", callback, args=args, **kwargs)
+
+        grid.append(args)
+        return self._post_grid("pointWrite", grid, callback, **kwargs)
 
     def _on_his_read(self, point, rng, callback, **kwargs):
         if isinstance(rng, slice):
