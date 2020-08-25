@@ -539,12 +539,12 @@ class HaystackSession(object):
             # Better be valid!
             str_rng = rng
 
-        return self._get_grid(
-            "hisRead",
-            callback,
-            args={"id": self._obj_to_ref(point), "range": str_rng},
-            **kwargs
-        )
+        grid = hszinc.Grid()
+        grid.column["id"] = {}
+        grid.column["range"] = {}
+        grid.append({"id": self._obj_to_ref(point), "range": str_rng})
+
+        return self._post_grid("hisRead", grid, callback, **kwargs)
 
     def _on_his_write(self, point, timestamp_records, callback, **kwargs):
         grid = hszinc.Grid()
